@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LEGO JS-to-Python Transpiler</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; }
+textarea { width: 100%; height: 200px; margin-bottom: 10px; font-family: monospace; }
+button { padding: 10px 20px; margin-bottom: 10px; }
+pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
+</style>
+</head>
+<body>
+
+<h1>LEGO JS-to-Python Transpiler</h1>
+
+<h3>Paste your JS code here:</h3>
+<textarea id="jsInput">// Example:
+const motorsArr = ['A','B'];
+async function spinAll(){
+    await motors(['A','B'], 180).then(motor('C',180));
+    motorsArr.forEach(m => await motor(m,90));
+    await sleep(500);
+}
+spinAll();</textarea>
+
+<button onclick="transpile()">Generate Python</button>
+
+<h3>Python Output:</h3>
+<pre id="pyOutput"></pre>
+
+<script>
+function transpile() {
+    let jsCode = document.getElementById('jsInput').value;
+
+    let pyCode = jsCode
+      .replace(/let\s+(\w+)\s*=\s*(.+);/g, "$1 = $2")
+      .replace(/const\s+(\w+)\s*=\s*(.+);/g, "$1 = $2")
+      .replace(/\{([^}]+)\}/g, (m, inner) => {
+        const pairs = inner.split(",").map(p => {
+          const [k,v] = p.split(":").map(x => x.trim());
+          return `'${k}': ${v}`;
+        });
+        return `{ ${pairs.join(", ")} }`;
+      })
+      .replace(/for\s*\(\s*let\s+(\w+)\s*=\s*(\d+);\s*\1\s*<\s*(\d+);\s*\1\+\+\s*\)/g, "for $1 in range($2, $3):")
+      .replace(/while\s*\((.+)\)\s*\{/g, "while $1:")
+      .replace(/async function\s+(\w+)\s*\((.*?)\)\s*\{/g, "def $1($2):")
+      .replace(/function\s+(\w+)\s*\((.*?)\)\s*\{/g, "def $1($2):")
+      .replace(/console\.log\((.+)\);/g, "print($1)")
+      .replace(/\/\/(.+)/g, "#$1")
+      .replace(/\{/g,"").replace(/\}/g,"")
+      .replace(/await sleep\((.+)\)/g, "time.sleep($1/1000)")
+      .replace(/await\s+motor\(['"](\w)['"]\s*,\s*(\d+)(?:\s*,\s*(\d+))?\)/g, (m,p1,p2,p3)=> {
+        return p3 ? `Motor('${p1}').run_for_degrees(${p2}, ${p3})` : `Motor('${p1}').run_for_degrees(${p2})`;
+      })
+      .replace(/await\s+motors\(\[([A-Za-z0-9,'"]+)\]\s*,\s*(\d+)(?:\s*,\s*(\d+))?\)/g, (m, motors, deg, speed)=>{
+        const motorList = motors.split(",").map(x=>x.replace(/['"]/g,"").trim());
+        return motorList.map(mot=> speed ? `Motor('${mot}').run_for_degrees(${deg}, ${speed})` : `Motor('${mot}').run_for_degrees(${deg})`).join("\n");
+      })
+      .replace(/await\s+(motor|motors)\(.+\)\.then\((motor|motors)\(.+\)\)/g, m=>{
+        return m.replace(/await /g,"").replace(/\.then/g,"\n");
+      })
+      .replace(/(\w+)\.forEach\s*\(\s*(\w+)\s*=>\s*(await\s+.+)\)/g, (m, arrName, item, action) => {
+        let inner = action.replace("await ", "");
+        return `for ${item} in ${arrName}:\n    ${inner}`;
+      })
+      .replace(/colorSensor\(['"](\w)['"]\)/g, "ColorSensor('$1')")
+      .replace(/gyroSensor\(['"](\w)['"]\)/g, "GyroSensor('$1')");
+
+    pyCode = `
+from mindstorms import Motor, ColorSensor, GyroSensor
+import time
+
+${pyCode}
+    `;
+
+    document.getElementById('pyOutput').innerText = pyCode;
+}
+</script>
+
+</body>
+</html>
