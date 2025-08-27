@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LEGO JS-to-Python Cheat Card</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; }
+h1,h2,h3 { color: #2a2a2a; }
+pre { background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; }
+code { font-family: monospace; }
+button { padding: 10px 20px; margin: 10px 0; cursor: pointer; }
+section { margin-bottom: 20px; }
+</style>
+</head>
+<body>
+<h1>LEGO JS-to-Python Cheat Card</h1>
+
+<button onclick="window.print()">Download / Print PDF</button>
+
+<section>
+<h2>Variables</h2>
+<pre><code>let x = 5;   // JS
+const y = 10; // JS
+
+x = 5        # Python
+y = 10       # Python</code></pre>
+</section>
+
+<section>
+<h2>Objects</h2>
+<pre><code>const motorSettings = {speed:100, degrees:180};  // JS
+motorSettings = {'speed':100,'degrees':180}        # Python</code></pre>
+</section>
+
+<section>
+<h2>Arrays & Loops</h2>
+<pre><code>const motorsArr = ['A','B','C'];
+motorsArr.forEach(m => await motor(m,90));
+
+// Python
+motorsArr = ['A','B','C']
+for m in motorsArr:
+    Motor(m).run_for_degrees(90)</code></pre>
+</section>
+
+<section>
+<h2>Functions</h2>
+<pre><code>function hello(name){ console.log("Hi "+name); }
+async function spinMotor(m){ await motor(m,180); }
+
+// Python
+def hello(name):
+    print("Hi "+name)
+
+def spinMotor(m):
+    Motor(m).run_for_degrees(180)</code></pre>
+</section>
+
+<section>
+<h2>Motors & Chaining</h2>
+<pre><code>await motor('A',180);
+await motor('B',180,50);
+await motors(['A','B'],180).then(motor('C',180));
+
+// Python
+Motor('A').run_for_degrees(180)
+Motor('B').run_for_degrees(180,50)
+Motor('A').run_for_degrees(180)
+Motor('B').run_for_degrees(180)
+Motor('C').run_for_degrees(180)</code></pre>
+</section>
+
+<section>
+<h2>Sleep / Wait</h2>
+<pre><code>await sleep(500); // JS
+time.sleep(500/1000) # Python</code></pre>
+</section>
+
+<section>
+<h2>Sensors</h2>
+<pre><code>let c = colorSensor('C');
+let g = gyroSensor('G');
+
+// Python
+c = ColorSensor('C')
+g = GyroSensor('G')</code></pre>
+</section>
+
+<section>
+<h2>Example Program</h2>
+<pre><code>const motorsArr = ['A','B'];
+
+async function spinAll(){
+    await motors(['A','B'],180).then(motor('C',180));
+    motorsArr.forEach(m => await motor(m,90));
+    await sleep(500);
+}
+
+spinAll();
+
+// Python
+from mindstorms import Motor, ColorSensor, GyroSensor
+import time
+
+motorsArr = ['A','B']
+
+def spinAll():
+    Motor('A').run_for_degrees(180)
+    Motor('B').run_for_degrees(180)
+    Motor('C').run_for_degrees(180)
+    for m in motorsArr:
+        Motor(m).run_for_degrees(90)
+    time.sleep(500/1000)
+
+spinAll()</code></pre>
+</section>
+
+</body>
+</html>
